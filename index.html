@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حالة الطقس</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #0d1117, #161b22, #0d1117);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .main-container {
+            background: rgba(20, 24, 31, 0.9);
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: fadeIn 1.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #00b4d8;
+            text-shadow: 0 0 15px rgba(0, 180, 216, 0.8);
+        }
+
+        input {
+            padding: 15px;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 15px;
+            font-size: 18px;
+            width: 100%;
+            max-width: 300px;
+            background-color: #0d1117;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 180, 216, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 180, 216, 0.8);
+        }
+
+        button {
+            background: #0077b6;
+            border: none;
+            border-radius: 5px;
+            padding: 12px 20px;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            transition: background 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 119, 182, 0.8);
+        }
+
+        button:hover {
+            background: #0096c7;
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px rgba(0, 150, 199, 0.9);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #loadingMessage {
+            margin-top: 20px;
+            font-size: 20px;
+            background: #161b22;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        #weatherInfo {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 1s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        #cityName {
+            font-size: 26px;
+            color: #ffcc00;
+            margin-bottom: 10px;
+        }
+
+        #temperature, #description, #humidity, #wind, #pressure {
+            font-size: 18px;
+            margin: 8px 0;
+            color: #87cefa;
+        }
+
+        .error {
+            color: #ff4b4b;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        #city:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(76, 161, 175, 0.8);
+            transform: scale(1.05);
+        }
+
+        .main-container, h1, button, #city, #weatherInfo {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .main-container:hover,
+        h1:hover,
+        button:hover,
+        #city:hover,
+        #weatherInfo:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>حالة الطقس</h1>
+        <input type="text" id="city" placeholder="اكتب اسم المدينة" oninput="checkInput()" onkeypress="handleKeyPress(event)">
+        <button onclick="getWeather()">عرض الطقس</button>
+
+        <div id="loadingMessage">جارٍ البحث عن طقسك...</div>
+        <div id="weatherInfo">
+            <h2 id="cityName"></h2>
+            <p id="temperature"></p>
+            <p id="description"></p>
+            <p id="humidity"></p>
+            <p id="wind"></p>
+            <p id="pressure"></p>
+        </div>
+        <p id="errorMessage" class="error"></p>
+    </div>
+
+    <script>
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                getWeather();
+            }
+        }
+
+        function checkInput() {
+            const cityInput = document.getElementById('city').value.trim();
+            const weatherInfo = document.getElementById('weatherInfo');
+            if (cityInput === '') {
+                weatherInfo.style.animation = 'slideOut 1s ease';
+                setTimeout(() => {
+                    weatherInfo.style.display = 'none';
+                }, 1000);
+            }
+        }
+
+        function getWeather() {
+            const cityInput = document.getElementById('city').value.trim();
+            if (!cityInput) {
+                document.getElementById('errorMessage').textContent = "يرجى إدخال اسم المدينة";
+                return;
+            }
+
+            const apiKey = '4928e5be15ace36409e63c6940e3a8a3'; // ضع مفتاح API الخاص بك هنا
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${cityInput}&appid=${apiKey}&units=metric&lang=ar`;
+
+            const weatherInfo = document.getElementById('weatherInfo');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const errorMessage = document.getElementById('errorMessage');
+
+            errorMessage.textContent = "";
+            weatherInfo.style.display = "none";
+            loadingMessage.style.display = "block";
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("المدينة غير موجودة أو حدث خطأ.");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('cityName').textContent = `المدينة: ${data.name}`;
+                    document.getElementById('temperature').textContent = `درجة الحرارة: ${data.main.temp}°C`;
+                    document.getElementById('description').textContent = `حالة الطقس: ${data.weather[0].description}`;
+                    document.getElementById('humidity').textContent = `الرطوبة: ${data.main.humidity}%`;
+                    document.getElementById('wind').textContent = `سرعة الرياح: ${data.wind.speed} متر/ثانية`;
+                    document.getElementById('pressure').textContent = `الضغط الجوي: ${data.main.pressure} هيكتوباسكال`;
+
+                    loadingMessage.style.display = "none";
+                    weatherInfo.style.animation = 'slideIn 1s ease';
+                    weatherInfo.style.display = "block";
+                })
+                .catch(error => {
+                    loadingMessage.style.display = "none";
+                    errorMessage.textContent = `خطأ: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>
